@@ -1,83 +1,270 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#79152f">
-  <title>Eu Vou! | Encontro de Casais</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="description"
+    content="Personalize seu card Nós Vamos para o Encontro de Casais da Igreja Evangélica Assembleia de Deus — Ministério de Paracambi."
+  >
+
+  <title>Nós Vamos! | Encontro de Casais</title>
+
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+
+  <!-- Biblioteca para gerar a imagem PNG -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"
+    defer
+  ></script>
+
   <script src="script.js" defer></script>
 </head>
+
 <body>
   <header class="hero">
-    <p class="eyebrow">Igreja Evangélica Assembleia de Deus</p>
-    <p class="ministry">Ministério de Paracambi | RJ</p>
-    <div class="rule" aria-hidden="true">♥</div>
-    <h1>Encontro de <em>Casais</em></h1>
-    <p class="verse">“Acima de tudo, porém, revistam-se do amor, que é o vínculo da perfeição.”</p>
-    <p class="reference">Colossenses 3:14</p>
+    <div class="hero-content">
+      <p class="church-name">
+        IGREJA EVANGÉLICA ASSEMBLEIA DE DEUS
+      </p>
+
+      <p class="church-ministry">
+        MINISTÉRIO DE PARACAMBI | RJ
+      </p>
+
+      <div class="ornament" aria-hidden="true">
+        <span></span>
+        <span class="heart">♥</span>
+        <span></span>
+      </div>
+
+      <h1>
+        ENCONTRO DE
+        <span>Casais</span>
+      </h1>
+
+      <p class="hero-verse">
+        “Acima de tudo, porém, revistam-se do amor,
+        que é o vínculo da perfeição.”
+      </p>
+
+      <p class="verse-reference">Colossenses 3:14</p>
+    </div>
   </header>
 
-  <main class="layout">
+  <main class="main-container">
+    <!-- FORMULÁRIO -->
     <section class="form-panel" aria-labelledby="form-title">
-      <div class="section-heading"><span class="step">1</span><div><h2 id="form-title">Personalize seu card</h2><p>Adicione a foto e os nomes. A prévia muda na hora.</p></div></div>
-      <label class="field-label" for="couplePhoto">Foto do casal</label>
-      <label class="upload" for="couplePhoto"><span>＋</span> Escolher foto</label>
-      <input id="couplePhoto" class="visually-hidden" type="file" accept="image/*">
-      <p class="help">Escolha uma foto nítida com os dois aparecendo. Ela será recortada em círculo.</p>
+      <div class="section-heading">
+        <span class="step-number">1</span>
 
-      <div class="field-group">
-        <label class="field-label" for="coupleNames">Nome do casal</label>
-        <input id="coupleNames" class="text-input" type="text" maxlength="48" placeholder="Ex.: Ana e Marcos">
-        <p class="counter"><span id="nameCount">0</span>/48 caracteres</p>
-      </div>
-      <div class="field-group">
-        <label class="field-label" for="customMessage">Mensagem opcional</label>
-        <input id="customMessage" class="text-input" type="text" maxlength="70" placeholder="Ex.: Nós estaremos lá!">
-        <p class="help">Se deixar em branco, o card mostrará “NÓS VAMOS!”.</p>
+        <div>
+          <h2 id="form-title">Personalize seu card</h2>
+          <p>Coloque uma foto de vocês e seus nomes.</p>
+        </div>
       </div>
 
-      <div class="event-info"><span class="event-icon">♥</span><div><strong>14 de novembro de 2026 · 19h</strong></div></div>
-      <div class="actions">
-        <button id="downloadButton" class="button primary" type="button">↓ Baixar meu card (PNG)</button>
-        <button id="whatsappButton" class="button whatsapp" type="button">Compartilhar pelo WhatsApp</button>
-      </div>
-      <p id="statusMessage" class="status" role="status" aria-live="polite"></p>
-      <p class="privacy">Sua foto é processada neste navegador e não é enviada para um servidor.</p>
+      <form id="cardForm">
+        <div class="form-group">
+          <label for="couplePhoto">Foto do casal</label>
+
+          <label
+            for="couplePhoto"
+            id="uploadButton"
+            class="upload-control"
+          >
+            <span id="uploadIcon" class="upload-icon" aria-hidden="true">+</span>
+            <span id="uploadText">Escolher foto</span>
+          </label>
+
+          <input
+            type="file"
+            id="couplePhoto"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            hidden
+          >
+
+          <p class="field-help">
+            Escolha uma foto nítida com os dois aparecendo.
+            Ela será recortada em círculo.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label for="coupleNames">Nome do casal</label>
+
+          <input
+            type="text"
+            id="coupleNames"
+            maxlength="48"
+            placeholder="Ex.: Ana e Marcos"
+            autocomplete="name"
+          >
+
+          <p class="character-count">
+            <span id="nameCount">0</span>/48 caracteres
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label for="customMessage">Mensagem opcional</label>
+
+          <input
+            type="text"
+            id="customMessage"
+            maxlength="90"
+            placeholder="Ex.: Nós estaremos lá!"
+          >
+
+          <p class="field-help">
+            Se deixar em branco, o card mostrará apenas “NÓS VAMOS!”.
+          </p>
+        </div>
+
+        <div class="event-info">
+          <span class="event-heart" aria-hidden="true">♥</span>
+
+          <div>
+            <strong>14 de novembro de 2026 · 19h</strong>
+            <span>Local: em breve</span>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button
+            type="button"
+            id="downloadButton"
+            class="action-button download-button"
+          >
+            ↓ Baixar meu card (PNG)
+          </button>
+
+          <button
+            type="button"
+            id="whatsappButton"
+            class="action-button whatsapp-button"
+          >
+            Compartilhar no WhatsApp
+          </button>
+        </div>
+
+        <p
+          id="statusMessage"
+          class="status-message"
+          role="status"
+          aria-live="polite"
+        ></p>
+      </form>
+
+      <p class="privacy-note">
+        Sua foto é processada no navegador. O site não envia a imagem
+        para um servidor.
+      </p>
     </section>
 
-    <section class="preview-column" aria-labelledby="preview-title">
-      <div class="section-heading preview-heading"><span class="step">2</span><div><h2 id="preview-title">Sua prévia</h2><p>Assim ficará o card para compartilhar nos Status.</p></div></div>
+    <!-- PRÉVIA -->
+    <section class="preview-section" aria-labelledby="preview-title">
+      <div class="section-heading preview-heading">
+        <span class="step-number">2</span>
+
+        <div>
+          <h2 id="preview-title">Sua prévia</h2>
+          <p>Assim ficará o card nos Status.</p>
+        </div>
+      </div>
+
       <div class="preview-stage">
-        <article id="shareCard" class="share-card" aria-label="Card Nós Vamos para o Encontro de Casais">
-          <div class="decoration decoration-one" aria-hidden="true"></div><div class="decoration decoration-two" aria-hidden="true"></div>
-          <header class="card-header">
-            <p class="card-church">Igreja Evangélica Assembleia de Deus</p>
-            <p class="card-ministry">Ministério de Paracambi | RJ</p>
-            <div class="card-rule" aria-hidden="true"><span>♥</span></div>
-            <h2>Encontro de</h2><p class="card-script">Casais</p>
-            <p class="card-tagline">UM TEMPO DE AMOR, FÉ E UNIÃO</p>
-          </header>
-          <div class="photo-circle">
-            <img id="photoPreview" alt="Foto escolhida do casal" hidden>
-            <div id="photoPlaceholder" class="photo-placeholder"><span class="heart">♡</span><strong>FOTO DO CASAL</strong><span>Escolha uma foto no formulário</span></div>
-          </div>
-          <section class="invitation">
-            <p class="invitation-eyebrow">ESTAREMOS JUNTOS NESTE DIA</p>
-            <p class="card-euvou">NÓS VAMOS!</p>
-            <p id="cardNames" class="card-names">Seu nome aqui</p>
+        <article id="shareCard" class="share-card">
+          <div class="card-decoration decoration-top"></div>
+          <div class="card-decoration decoration-bottom"></div>
+
+          <div class="card-content">
+            <p class="card-church">
+              IGREJA EVANGÉLICA ASSEMBLEIA DE DEUS
+            </p>
+
+            <p class="card-ministry">
+              MINISTÉRIO DE PARACAMBI | RJ
+            </p>
+
+            <div class="card-ornament" aria-hidden="true">
+              <span></span>
+              ♥
+              <span></span>
+            </div>
+
+            <h2 class="card-event-title">
+              ENCONTRO DE
+              <span>Casais</span>
+            </h2>
+
+            <p class="card-subtitle">UM TEMPO DE AMOR, FÉ E UNIÃO</p>
+
+            <div class="photo-circle">
+              <img
+                id="photoPreview"
+                alt="Foto do casal"
+                hidden
+              >
+
+              <div id="photoPlaceholder" class="photo-placeholder">
+                <span class="placeholder-heart" aria-hidden="true">♡</span>
+                <span>A FOTO DE VOCÊS</span>
+                <small>Escolha uma foto no formulário</small>
+              </div>
+            </div>
+
             <p id="cardMessage" class="card-message" hidden></p>
-          </section>
-          <div class="card-details">
-            <div class="detail"><span>DATA</span><strong>14 NOV 2026</strong></div><span class="detail-divider" aria-hidden="true"></span><div class="detail"><span>HORÁRIO</span><strong>19 HORAS</strong></div>
+
+            <div class="attendance-banner">
+              <span class="attendance-small">ESTAREMOS JUNTOS NESTE DIA</span>
+              <p class="card-euvou">NÓS VAMOS!</p>
+              <p id="cardNames" class="card-names">Seu nome aqui</p>
+            </div>
+
+            <div class="card-event-details">
+              <div>
+                <span>DATA</span>
+                <strong>14 NOV 2026</strong>
+              </div>
+
+              <div class="detail-divider"></div>
+
+              <div>
+                <span>HORÁRIO</span>
+                <strong>19 HORAS</strong>
+              </div>
+            </div>
+
+            <p class="card-location">LOCAL: EM BREVE</p>
+
+            <div class="card-verse">
+              <p>
+                “Acima de tudo, porém, revistam-se do amor,
+                que é o vínculo da perfeição.”
+              </p>
+              <strong>COLOSSENSES 3:14</strong>
+            </div>
+
+            <p class="card-footer">
+              ENCONTRO DE CASAIS · 2026
+            </p>
           </div>
-          
         </article>
       </div>
-      <p class="preview-tip">Card vertical 9:16, pensado para o Status do WhatsApp e Stories.</p>
+
+      <p class="preview-caption">
+        Card vertical, pensado para os Status do WhatsApp e Stories.
+      </p>
     </section>
   </main>
-  <footer class="site-footer">Encontro de Casais · 14 de novembro de 2026 <span>“Acima de tudo, revistam-se do amor.” — Colossenses 3:14</span></footer>
+
+  <footer class="page-footer">
+    Feito com carinho para o Encontro de Casais
+    <span>♥</span>
+    Fé · Amor · União
+  </footer>
 </body>
 </html>

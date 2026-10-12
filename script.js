@@ -2,16 +2,20 @@
 (() => {
   "use strict";
 
-  // ==========================================
-  // ELEMENTOS DO SITE
-  // ==========================================
+  // ========================================
+  // ELEMENTOS DA PÁGINA
+  // ========================================
 
   const photoInput = document.getElementById("couplePhoto");
-  const namesInput = document.getElementById("coupleNames");
-  const messageInput = document.getElementById("customMessage");
+  const uploadButton = document.getElementById("uploadButton");
+  const uploadIcon = document.getElementById("uploadIcon");
+  const uploadText = document.getElementById("uploadText");
 
   const photoPreview = document.getElementById("photoPreview");
   const photoPlaceholder = document.getElementById("photoPlaceholder");
+
+  const namesInput = document.getElementById("coupleNames");
+  const messageInput = document.getElementById("customMessage");
 
   const cardNames = document.getElementById("cardNames");
   const cardMessage = document.getElementById("cardMessage");
@@ -23,18 +27,49 @@
   const statusMessage = document.getElementById("statusMessage");
 
   let currentPhotoUrl = null;
+  let photoRequestId = 0;
 
-  // ==========================================
-  // MENSAGENS DE STATUS
-  // ==========================================
+  // ========================================
+  // MENSAGEM DE STATUS
+  // ========================================
 
-  function setStatus(message) {
+  function setStatus(message, type = "success") {
     statusMessage.textContent = message;
+    statusMessage.dataset.type = type;
   }
 
-  // ==========================================
-  // ATUALIZA OS NOMES EM TEMPO REAL
-  // ==========================================
+  // ========================================
+  // CONFERE SE OS ELEMENTOS EXISTEM
+  // ========================================
+
+  const requiredElements = [
+    photoInput,
+    uploadButton,
+    uploadIcon,
+    uploadText,
+    photoPreview,
+    photoPlaceholder,
+    namesInput,
+    messageInput,
+    cardNames,
+    cardMessage,
+    nameCount,
+    card,
+    downloadButton,
+    whatsappButton,
+    statusMessage
+  ];
+
+  if (requiredElements.some((element) => !element)) {
+    console.error(
+      "Algum elemento do HTML não foi encontrado. Confira os IDs do index.html."
+    );
+    return;
+  }
+
+  // ========================================
+  // ATUALIZA OS NOMES
+  // ========================================
 
   function updateNames() {
     const names = namesInput.value.trim();
@@ -43,9 +78,9 @@
     nameCount.textContent = namesInput.value.length;
   }
 
-  // ==========================================
+  // ========================================
   // ATUALIZA A MENSAGEM OPCIONAL
-  // ==========================================
+  // ========================================
 
   function updateMessage() {
     const message = messageInput.value.trim();
@@ -54,68 +89,102 @@
     cardMessage.hidden = !message;
   }
 
-  // ==========================================
-  // CARREGA A FOTO DO CASAL
-  // ==========================================
+  // ========================================
+  // RESTAURA O BOTÃO DE ESCOLHA DE FOTO
+  // ========================================
 
-  
-function loadPhoto(file) {
-  if (!file) return;
-
-  if (!file.type.startsWith("image/")) {
-    setStatus("Escolha um arquivo de imagem válido.");
-    photoInput.value = "";
-    return;
+  function resetUploadButton() {
+    uploadText.textContent = "Escolher foto";
+    uploadIcon.textContent = "+";
+    uploadButton.classList.remove("photo-selected");
   }
 
-  if (file.size > 15 * 1024 * 1024) {
-    setStatus("A imagem deve ter até 15 MB. Escolha uma foto menor.");
-    photoInput.value = "";
-    return;
-  }
+  // ========================================
+  // ESCOLHE E CARREGA A FOTO DO CASAL
+  // ========================================
 
-  if (currentPhotoUrl) {
-    URL.revokeObjectURL(currentPhotoUrl);
-  }
+  function loadPhoto(file) {
+    if (!file) return;
 
-  currentPhotoUrl = URL.createObjectURL(file);
+    const currentRequest = ++photoRequestId;
 
-  // Aguarda a foto carregar antes de confirmar.
-  photoPreview.onload = () => {
-    photoPreview.hidden = false;
-    photoPlaceholder.hidden = true;
+    // Verifica o formato.
+    if (!file.type.startsWith("image/")) {
+      setStatus(
+        "Escolha um arquivo de imagem válido.",
+        "error"
+      );
 
-    setStatus("✓ Foto escolhida com sucesso!");
-
-    // Atualiza também o texto do botão de seleção.
-    const uploadLabel = document.querySelector(
-      'label.upload-control[for="couplePhoto"]'
-    );
-
-    if (uploadLabel) {
-      uploadLabel.innerHTML = `
-        <span class="upload-icon">✓</span>
-        <span>Foto escolhida com sucesso!</span>
-      `;
-
-      uploadLabel.classList.add("photo-selected");
+      photoInput.value = "";
+      return;
     }
-  };
 
-  photoPreview.onerror = () => {
-    photoPreview.hidden = true;
-    photoPlaceholder.hidden = false;
+    // Limita o tamanho a 15 MB.
+    if (file.size > 15 * 1024 * 1024) {
+      setStatus(
+        "A imagem deve ter até 15 MB. Escolha uma foto menor.",
+        "error"
+      );
 
-    setStatus("Não foi possível abrir a foto. Tente outra imagem.");
-  };
+      photoInput.value = "";
+      return;
+    }
 
-  photoPreview.src = currentPhotoUrl;
-}
+    const newPhotoUrl = URL.createObjectURL(file);
 
+    // Aguarda a nova imagem ser carregada.
+    const imageLoader = new Image();
 
-  // ==========================================
-  // CRIA UM NOME SEGURO PARA O ARQUIVO
-  // ==========================================
+    imageLoader.onload = () => {
+      // Ignora uma seleção antiga se outra foto foi escolhida.
+      if (currentRequest !== photoRequestId) {
+        URL.revokeObjectURL(newPhotoUrl);
+        return;
+      }
+
+      // Libera a URL da foto anterior.
+      if (currentPhotoUrl) {
+        URL.revokeObjectURL(currentPhotoUrl);
+      }
+
+      currentPhotoUrl = newPhotoUrl;
+
+      photoPreview.src = currentPhotoUrl;
+      photoPreview.hidden = false;
+      photoPlaceholder.hidden = true;
+
+      // ALTERAÇÃO PRINCIPAL:
+      // O próprio botão mostra a confirmação.
+      uploadIcon.textContent = "✓";
+      uploadText.textContent = "Foto escolhida com sucesso!";
+      uploadButton.classList.add("photo-selected");
+
+      setStatus(
+        "Foto escolhida com sucesso! A prévia já foi atualizada."
+      );
+    };
+
+    imageLoader.onerror = () => {
+      URL.revokeObjectURL(newPhotoUrl);
+
+      if (currentRequest !== photoRequestId) {
+        return;
+      }
+
+      photoInput.value = "";
+
+      setStatus(
+        "Não foi possível abrir essa foto. Tente outra imagem.",
+        "error"
+      );
+    };
+
+    imageLoader.src = newPhotoUrl;
+  }
+
+  // ========================================
+  // NOME DO ARQUIVO PNG
+  // ========================================
 
   function safeFileName(value) {
     const normalized = value
@@ -123,24 +192,27 @@ function loadPhoto(file) {
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
+      .replace(/^-+|-+$/g, "");
 
     return normalized || "encontro-de-casais";
   }
 
-  // ==========================================
-  // GERA A IMAGEM DO CARD
-  // ==========================================
+  // ========================================
+  // PREPARA O CARD PARA EXPORTAÇÃO
+  // ========================================
 
   async function renderCardCanvas() {
     if (typeof window.html2canvas !== "function") {
       throw new Error(
-        "A biblioteca de imagem não carregou. Verifique sua conexão com a internet e atualize a página."
+        "A biblioteca de PNG não carregou. Verifique sua conexão e atualize a página."
       );
     }
 
-    // Aguarda a foto terminar de carregar.
-    if (!photoPreview.hidden && !photoPreview.complete) {
+    // Aguarda a imagem selecionada estar pronta.
+    if (
+      !photoPreview.hidden &&
+      (!photoPreview.complete || photoPreview.naturalWidth === 0)
+    ) {
       await new Promise((resolve, reject) => {
         photoPreview.addEventListener("load", resolve, {
           once: true
@@ -152,9 +224,9 @@ function loadPhoto(file) {
       });
     }
 
-    // Captura somente o card vertical.
-    return await window.html2canvas(card, {
-      backgroundColor: null,
+    // Renderiza somente o card, não a página inteira.
+    return window.html2canvas(card, {
+      backgroundColor: "#fffaf3",
       scale: 3,
       useCORS: true,
       logging: false,
@@ -165,9 +237,9 @@ function loadPhoto(file) {
     });
   }
 
-  // ==========================================
-  // CONVERTE A IMAGEM PARA PNG
-  // ==========================================
+  // ========================================
+  // CONVERTE CANVAS EM PNG
+  // ========================================
 
   function canvasToBlob(canvas) {
     return new Promise((resolve, reject) => {
@@ -175,22 +247,24 @@ function loadPhoto(file) {
         if (blob) {
           resolve(blob);
         } else {
-          reject(new Error("Não foi possível criar a imagem PNG."));
+          reject(
+            new Error("Não foi possível criar o arquivo PNG.")
+          );
         }
       }, "image/png");
     });
   }
 
-  // ==========================================
-  // BAIXA A IMAGEM
-  // ==========================================
+  // ========================================
+  // BAIXA O ARQUIVO
+  // ========================================
 
   function downloadBlob(blob) {
     const url = URL.createObjectURL(blob);
-
     const link = document.createElement("a");
 
     link.href = url;
+
     link.download =
       `nos-vamos-${safeFileName(namesInput.value)}.png`;
 
@@ -200,8 +274,12 @@ function loadPhoto(file) {
 
     setTimeout(() => {
       URL.revokeObjectURL(url);
-    }, 1500);
+    }, 2000);
   }
+
+  // ========================================
+  // BOTÃO BAIXAR PNG
+  // ========================================
 
   async function downloadCard() {
     downloadButton.disabled = true;
@@ -215,23 +293,23 @@ function loadPhoto(file) {
       downloadBlob(blob);
 
       setStatus(
-        "Card NÓS VAMOS! baixado! Pronto para publicar nos Status."
+        "Card NÓS VAMOS! baixado. Pronto para publicar nos Status."
       );
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao gerar o card:", error);
 
       setStatus(
-        error.message ||
-        "Não foi possível gerar a imagem. Tente novamente."
+        error.message || "Não foi possível gerar o PNG.",
+        "error"
       );
     } finally {
       downloadButton.disabled = false;
     }
   }
 
-  // ==========================================
-  // COMPARTILHA PELO WHATSAPP
-  // ==========================================
+  // ========================================
+  // BOTÃO COMPARTILHAR NO WHATSAPP
+  // ========================================
 
   async function shareOnWhatsApp() {
     whatsappButton.disabled = true;
@@ -239,21 +317,16 @@ function loadPhoto(file) {
     setStatus("Preparando o compartilhamento...");
 
     const names = namesInput.value.trim();
-    const custom = messageInput.value.trim();
+    const customMessage = messageInput.value.trim();
 
     const shareText = [
       "NÓS VAMOS! ❤️",
-
       names
         ? `${names} estarão no Encontro de Casais!`
         : "Estaremos juntos no Encontro de Casais!",
-
-      custom,
-
-      "📅 14 de novembro de 2026, às 19h",
-
-      "📍 Local a confirmar",
-
+      customMessage,
+      "Data: 14 de novembro de 2026, às 19h",
+      "Local: em breve",
       "Colossenses 3:14"
     ]
       .filter(Boolean)
@@ -269,8 +342,7 @@ function loadPhoto(file) {
         { type: "image/png" }
       );
 
-      // Em celulares e navegadores compatíveis,
-      // permite compartilhar o PNG diretamente.
+      // Compartilha o PNG diretamente quando o navegador permite.
       if (
         navigator.share &&
         navigator.canShare &&
@@ -283,11 +355,10 @@ function loadPhoto(file) {
         });
 
         setStatus(
-          "Compartilhamento aberto. Selecione o WhatsApp na lista de aplicativos."
+          "Compartilhamento aberto. Selecione o WhatsApp."
         );
       } else {
-        // Alternativa para navegadores sem compartilhamento
-        // de arquivos: baixa o card e abre o WhatsApp.
+        // Alternativa para navegadores sem suporte a arquivos.
         downloadBlob(blob);
 
         const whatsappUrl =
@@ -304,17 +375,18 @@ function loadPhoto(file) {
         );
 
         setStatus(
-          "O card foi baixado e o WhatsApp foi aberto. Anexe a imagem à conversa."
+          "Card baixado! No WhatsApp, anexe a imagem à conversa."
         );
       }
     } catch (error) {
       if (error && error.name === "AbortError") {
         setStatus("Compartilhamento cancelado.");
       } else {
-        console.error(error);
+        console.error("Erro ao compartilhar:", error);
 
         setStatus(
-          "Não foi possível compartilhar automaticamente. Baixe o PNG e envie pelo WhatsApp."
+          "Não foi possível compartilhar automaticamente. Tente baixar o PNG.",
+          "error"
         );
       }
     } finally {
@@ -322,13 +394,16 @@ function loadPhoto(file) {
     }
   }
 
-  // ==========================================
-  // EVENTOS DOS CAMPOS E BOTÕES
-  // ==========================================
+  // ========================================
+  // EVENTOS
+  // ========================================
 
   photoInput.addEventListener("change", (event) => {
     const file = event.target.files?.[0];
-    loadPhoto(file);
+
+    if (file) {
+      loadPhoto(file);
+    }
   });
 
   namesInput.addEventListener("input", updateNames);
@@ -339,11 +414,12 @@ function loadPhoto(file) {
 
   whatsappButton.addEventListener("click", shareOnWhatsApp);
 
-  // ==========================================
+  // ========================================
   // INICIALIZAÇÃO
-  // ==========================================
+  // ========================================
 
   updateNames();
   updateMessage();
+  resetUploadButton();
 
 })();
