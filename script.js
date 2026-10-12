@@ -1,237 +1,333 @@
 
-const photoInput = document.getElementById("couplePhoto");
-const namesInput = document.getElementById("coupleNames");
-const messageInput = document.getElementById("shortMessage");
+(() => {
+  "use strict";
 
-const photoPreview = document.getElementById("photoPreview");
-const photoPlaceholder = document.getElementById("photoPlaceholder");
-const previewNames = document.getElementById("previewNames");
-const previewMessage = document.getElementById("previewMessage");
-const nameCount = document.getElementById("nameCount");
+  // ==========================================
+  // ELEMENTOS DO SITE
+  // ==========================================
 
-const downloadBtn = document.getElementById("downloadBtn");
-const shareBtn = document.getElementById("shareBtn");
-const statusMessage = document.getElementById("statusMessage");
-const shareCard = document.getElementById("shareCard");
+  const photoInput = document.getElementById("couplePhoto");
+  const namesInput = document.getElementById("coupleNames");
+  const messageInput = document.getElementById("customMessage");
 
-let currentPhotoUrl = null;
+  const photoPreview = document.getElementById("photoPreview");
+  const photoPlaceholder = document.getElementById("photoPlaceholder");
 
-// Exibe mensagens para a pessoa que está usando o site.
-function setStatus(message) {
-  statusMessage.textContent = message;
-}
+  const cardNames = document.getElementById("cardNames");
+  const cardMessage = document.getElementById("cardMessage");
+  const nameCount = document.getElementById("nameCount");
 
-// Atualiza os nomes e a mensagem na prévia.
-function updatePreview() {
-  const names = namesInput.value.trim();
-  const message = messageInput.value.trim();
+  const card = document.getElementById("shareCard");
+  const downloadButton = document.getElementById("downloadButton");
+  const whatsappButton = document.getElementById("whatsappButton");
+  const statusMessage = document.getElementById("statusMessage");
 
-  previewNames.textContent = names || "Seu nome aqui";
-  nameCount.textContent = namesInput.value.length;
+  let currentPhotoUrl = null;
 
-  previewMessage.textContent = message;
-  previewMessage.hidden = !message;
-}
+  // ==========================================
+  // MENSAGENS DE STATUS
+  // ==========================================
 
-// Permite selecionar a foto do casal.
-photoInput.addEventListener("change", () => {
-  const file = photoInput.files[0];
-
-  if (!file) return;
-
-  if (!file.type.startsWith("image/")) {
-    setStatus("Por favor, escolha um arquivo de imagem.");
-    photoInput.value = "";
-    return;
+  function setStatus(message) {
+    statusMessage.textContent = message;
   }
 
-  if (file.size > 15 * 1024 * 1024) {
-    setStatus("A foto deve ter menos de 15 MB.");
-    photoInput.value = "";
-    return;
+  // ==========================================
+  // ATUALIZA OS NOMES EM TEMPO REAL
+  // ==========================================
+
+  function updateNames() {
+    const names = namesInput.value.trim();
+
+    cardNames.textContent = names || "Seu nome aqui";
+    nameCount.textContent = namesInput.value.length;
   }
 
-  if (currentPhotoUrl) {
-    URL.revokeObjectURL(currentPhotoUrl);
+  // ==========================================
+  // ATUALIZA A MENSAGEM OPCIONAL
+  // ==========================================
+
+  function updateMessage() {
+    const message = messageInput.value.trim();
+
+    cardMessage.textContent = message;
+    cardMessage.hidden = !message;
   }
 
-  currentPhotoUrl = URL.createObjectURL(file);
+  // ==========================================
+  // CARREGA A FOTO DO CASAL
+  // ==========================================
 
-  photoPreview.onload = () => {
-    photoPreview.hidden = false;
-    photoPlaceholder.hidden = true;
-    setStatus("Foto adicionada com sucesso!");
-  };
+  function loadPhoto(file) {
+    if (!file) return;
 
-  photoPreview.onerror = () => {
-    photoPreview.hidden = true;
-    photoPlaceholder.hidden = false;
-    setStatus("Não foi possível abrir a foto. Tente outra.");
-  };
-
-  photoPreview.src = currentPhotoUrl;
-});
-
-// Atualiza a prévia enquanto a pessoa digita.
-namesInput.addEventListener("input", updatePreview);
-messageInput.addEventListener("input", updatePreview);
-
-// Aguarda a biblioteca de geração de imagens carregar.
-function waitForHtml2Canvas() {
-  return new Promise((resolve, reject) => {
-    let attempts = 0;
-
-    function checkLibrary() {
-      if (typeof window.html2canvas === "function") {
-        resolve();
-        return;
-      }
-
-      attempts++;
-
-      if (attempts >= 30) {
-        reject(
-          new Error(
-            "A ferramenta de imagem não carregou. Verifique sua internet e atualize a página."
-          )
-        );
-        return;
-      }
-
-      setTimeout(checkLibrary, 300);
+    if (!file.type.startsWith("image/")) {
+      setStatus("Escolha uma imagem JPG, PNG ou WEBP.");
+      photoInput.value = "";
+      return;
     }
 
-    checkLibrary();
-  });
-}
+    // Limita o arquivo a 15 MB.
+    if (file.size > 15 * 1024 * 1024) {
+      setStatus("A imagem deve ter até 15 MB. Escolha uma foto menor.");
+      photoInput.value = "";
+      return;
+    }
 
-// Transforma o card em uma imagem PNG.
-async function generateCardImage() {
-  await waitForHtml2Canvas();
+    if (currentPhotoUrl) {
+      URL.revokeObjectURL(currentPhotoUrl);
+    }
 
-  if (!photoPreview.hidden && !photoPreview.complete) {
-    await new Promise((resolve, reject) => {
-      photoPreview.onload = resolve;
-      photoPreview.onerror = reject;
+    currentPhotoUrl = URL.createObjectURL(file);
+
+    photoPreview.onload = () => {
+      photoPreview.hidden = false;
+      photoPlaceholder.hidden = true;
+
+      setStatus("Foto adicionada! A prévia foi atualizada.");
+    };
+
+    photoPreview.onerror = () => {
+      photoPreview.hidden = true;
+      photoPlaceholder.hidden = false;
+
+      setStatus("Não foi possível abrir essa imagem. Tente outra foto.");
+    };
+
+    photoPreview.src = currentPhotoUrl;
+  }
+
+  // ==========================================
+  // CRIA UM NOME SEGURO PARA O ARQUIVO
+  // ==========================================
+
+  function safeFileName(value) {
+    const normalized = value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    return normalized || "encontro-de-casais";
+  }
+
+  // ==========================================
+  // GERA A IMAGEM DO CARD
+  // ==========================================
+
+  async function renderCardCanvas() {
+    if (typeof window.html2canvas !== "function") {
+      throw new Error(
+        "A biblioteca de imagem não carregou. Verifique sua conexão com a internet e atualize a página."
+      );
+    }
+
+    // Aguarda a foto terminar de carregar.
+    if (!photoPreview.hidden && !photoPreview.complete) {
+      await new Promise((resolve, reject) => {
+        photoPreview.addEventListener("load", resolve, {
+          once: true
+        });
+
+        photoPreview.addEventListener("error", reject, {
+          once: true
+        });
+      });
+    }
+
+    // Captura somente o card vertical.
+    return await window.html2canvas(card, {
+      backgroundColor: null,
+      scale: 3,
+      useCORS: true,
+      logging: false,
+      width: card.offsetWidth,
+      height: card.offsetHeight,
+      scrollX: 0,
+      scrollY: 0
     });
   }
 
-  const canvas = await window.html2canvas(shareCard, {
-    scale: 3,
-    useCORS: true,
-    backgroundColor: "#fff8ed",
-    logging: false
-  });
+  // ==========================================
+  // CONVERTE A IMAGEM PARA PNG
+  // ==========================================
 
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) {
-        resolve(blob);
-      } else {
-        reject(new Error("Não foi possível criar a imagem."));
-      }
-    }, "image/png");
-  });
-}
+  function canvasToBlob(canvas) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          resolve(blob);
+        } else {
+          reject(new Error("Não foi possível criar a imagem PNG."));
+        }
+      }, "image/png");
+    });
+  }
 
-// Faz o download do card.
-async function downloadCard() {
-  downloadBtn.disabled = true;
-  setStatus("Gerando seu card. Aguarde...");
+  // ==========================================
+  // BAIXA A IMAGEM
+  // ==========================================
 
-  try {
-    const blob = await generateCardImage();
-    const imageUrl = URL.createObjectURL(blob);
+  function downloadBlob(blob) {
+    const url = URL.createObjectURL(blob);
 
     const link = document.createElement("a");
-    link.href = imageUrl;
-    link.download = "eu-vou-encontro-de-casais.png";
+
+    link.href = url;
+    link.download =
+      `nos-vamos-${safeFileName(namesInput.value)}.png`;
 
     document.body.appendChild(link);
     link.click();
     link.remove();
 
-    setTimeout(() => URL.revokeObjectURL(imageUrl), 2000);
-
-    setStatus("Card baixado! Agora publique nos seus Status.");
-  } catch (error) {
-    console.error(error);
-    setStatus(error.message || "Erro ao gerar o card. Tente novamente.");
-  } finally {
-    downloadBtn.disabled = false;
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1500);
   }
-}
 
-// Compartilha o card usando as opções disponíveis no dispositivo.
-async function shareCardImage() {
-  shareBtn.disabled = true;
-  setStatus("Preparando seu card para compartilhar...");
+  async function downloadCard() {
+    downloadButton.disabled = true;
 
-  try {
-    const blob = await generateCardImage();
+    setStatus("Preparando seu card em PNG...");
 
-    const file = new File(
-      [blob],
-      "eu-vou-encontro-de-casais.png",
-      { type: "image/png" }
-    );
+    try {
+      const canvas = await renderCardCanvas();
+      const blob = await canvasToBlob(canvas);
 
-    const message =
-      "Eu vou! ❤️ Encontro de Casais\n" +
-      "14 de novembro de 2026, às 19h.\n" +
-      "Colossenses 3:14";
-
-    // Alguns celulares permitem compartilhar a imagem diretamente.
-    if (
-      navigator.share &&
-      navigator.canShare &&
-      navigator.canShare({ files: [file] })
-    ) {
-      await navigator.share({
-        files: [file],
-        title: "Eu Vou! — Encontro de Casais",
-        text: message
-      });
-
-      setStatus("Compartilhamento concluído ou enviado para o aplicativo escolhido.");
-    } else {
-      // Alternativa para navegadores sem compartilhamento de arquivos.
-      const imageUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-
-      link.href = imageUrl;
-      link.download = "eu-vou-encontro-de-casais.png";
-
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      setTimeout(() => URL.revokeObjectURL(imageUrl), 2000);
-
-      const whatsappUrl =
-        "https://wa.me/?text=" + encodeURIComponent(message);
-
-      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+      downloadBlob(blob);
 
       setStatus(
-        "Imagem baixada! No WhatsApp, anexe o PNG à conversa antes de enviar."
+        "Card NÓS VAMOS! baixado! Pronto para publicar nos Status."
       );
-    }
-  } catch (error) {
-    if (error.name === "AbortError") {
-      setStatus("Compartilhamento cancelado.");
-    } else {
+    } catch (error) {
       console.error(error);
-      setStatus(error.message || "Não foi possível compartilhar o card.");
+
+      setStatus(
+        error.message ||
+        "Não foi possível gerar a imagem. Tente novamente."
+      );
+    } finally {
+      downloadButton.disabled = false;
     }
-  } finally {
-    shareBtn.disabled = false;
   }
-}
 
-// Liga as funções aos botões.
-downloadBtn.addEventListener("click", downloadCard);
-shareBtn.addEventListener("click", shareCardImage);
+  // ==========================================
+  // COMPARTILHA PELO WHATSAPP
+  // ==========================================
 
-// Inicializa a prévia.
-updatePreview();
+  async function shareOnWhatsApp() {
+    whatsappButton.disabled = true;
+
+    setStatus("Preparando o compartilhamento...");
+
+    const names = namesInput.value.trim();
+    const custom = messageInput.value.trim();
+
+    const shareText = [
+      "NÓS VAMOS! ❤️",
+
+      names
+        ? `${names} estará(ão) no Encontro de Casais!`
+        : "Estaremos juntos no Encontro de Casais!",
+
+      custom,
+
+      "📅 14 de novembro de 2026, às 19h",
+
+      "📍 Local a confirmar",
+
+      "Colossenses 3:14"
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    try {
+      const canvas = await renderCardCanvas();
+      const blob = await canvasToBlob(canvas);
+
+      const file = new File(
+        [blob],
+        `nos-vamos-${safeFileName(names)}.png`,
+        { type: "image/png" }
+      );
+
+      // Em celulares e navegadores compatíveis,
+      // permite compartilhar o PNG diretamente.
+      if (
+        navigator.share &&
+        navigator.canShare &&
+        navigator.canShare({ files: [file] })
+      ) {
+        await navigator.share({
+          files: [file],
+          title: "Nós Vamos! — Encontro de Casais",
+          text: shareText
+        });
+
+        setStatus(
+          "Compartilhamento aberto. Selecione o WhatsApp na lista de aplicativos."
+        );
+      } else {
+        // Alternativa para navegadores sem compartilhamento
+        // de arquivos: baixa o card e abre o WhatsApp.
+        downloadBlob(blob);
+
+        const whatsappUrl =
+          "https://wa.me/?text=" +
+          encodeURIComponent(
+            shareText +
+            "\n\nAnexe o card PNG que acabou de baixar."
+          );
+
+        window.open(
+          whatsappUrl,
+          "_blank",
+          "noopener,noreferrer"
+        );
+
+        setStatus(
+          "O card foi baixado e o WhatsApp foi aberto. Anexe a imagem à conversa."
+        );
+      }
+    } catch (error) {
+      if (error && error.name === "AbortError") {
+        setStatus("Compartilhamento cancelado.");
+      } else {
+        console.error(error);
+
+        setStatus(
+          "Não foi possível compartilhar automaticamente. Baixe o PNG e envie pelo WhatsApp."
+        );
+      }
+    } finally {
+      whatsappButton.disabled = false;
+    }
+  }
+
+  // ==========================================
+  // EVENTOS DOS CAMPOS E BOTÕES
+  // ==========================================
+
+  photoInput.addEventListener("change", (event) => {
+    const file = event.target.files?.[0];
+    loadPhoto(file);
+  });
+
+  namesInput.addEventListener("input", updateNames);
+
+  messageInput.addEventListener("input", updateMessage);
+
+  downloadButton.addEventListener("click", downloadCard);
+
+  whatsappButton.addEventListener("click", shareOnWhatsApp);
+
+  // ==========================================
+  // INICIALIZAÇÃO
+  // ==========================================
+
+  updateNames();
+  updateMessage();
+
+})();
