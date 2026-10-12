@@ -58,44 +58,60 @@
   // CARREGA A FOTO DO CASAL
   // ==========================================
 
-  function loadPhoto(file) {
-    if (!file) return;
+  
+function loadPhoto(file) {
+  if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      setStatus("Escolha uma imagem JPG, PNG ou WEBP.");
-      photoInput.value = "";
-      return;
-    }
-
-    // Limita o arquivo a 15 MB.
-    if (file.size > 15 * 1024 * 1024) {
-      setStatus("A imagem deve ter até 15 MB. Escolha uma foto menor.");
-      photoInput.value = "";
-      return;
-    }
-
-    if (currentPhotoUrl) {
-      URL.revokeObjectURL(currentPhotoUrl);
-    }
-
-    currentPhotoUrl = URL.createObjectURL(file);
-
-    photoPreview.onload = () => {
-      photoPreview.hidden = false;
-      photoPlaceholder.hidden = true;
-
-      setStatus("Foto adicionada! A prévia foi atualizada.");
-    };
-
-    photoPreview.onerror = () => {
-      photoPreview.hidden = true;
-      photoPlaceholder.hidden = false;
-
-      setStatus("Não foi possível abrir essa imagem. Tente outra foto.");
-    };
-
-    photoPreview.src = currentPhotoUrl;
+  if (!file.type.startsWith("image/")) {
+    setStatus("Escolha um arquivo de imagem válido.");
+    photoInput.value = "";
+    return;
   }
+
+  if (file.size > 15 * 1024 * 1024) {
+    setStatus("A imagem deve ter até 15 MB. Escolha uma foto menor.");
+    photoInput.value = "";
+    return;
+  }
+
+  if (currentPhotoUrl) {
+    URL.revokeObjectURL(currentPhotoUrl);
+  }
+
+  currentPhotoUrl = URL.createObjectURL(file);
+
+  // Aguarda a foto carregar antes de confirmar.
+  photoPreview.onload = () => {
+    photoPreview.hidden = false;
+    photoPlaceholder.hidden = true;
+
+    setStatus("✓ Foto escolhida com sucesso!");
+
+    // Atualiza também o texto do botão de seleção.
+    const uploadLabel = document.querySelector(
+      'label.upload-control[for="couplePhoto"]'
+    );
+
+    if (uploadLabel) {
+      uploadLabel.innerHTML = `
+        <span class="upload-icon">✓</span>
+        <span>Foto escolhida com sucesso!</span>
+      `;
+
+      uploadLabel.classList.add("photo-selected");
+    }
+  };
+
+  photoPreview.onerror = () => {
+    photoPreview.hidden = true;
+    photoPlaceholder.hidden = false;
+
+    setStatus("Não foi possível abrir a foto. Tente outra imagem.");
+  };
+
+  photoPreview.src = currentPhotoUrl;
+}
+
 
   // ==========================================
   // CRIA UM NOME SEGURO PARA O ARQUIVO
@@ -229,7 +245,7 @@
       "NÓS VAMOS! ❤️",
 
       names
-        ? `${names} estará(ão) no Encontro de Casais!`
+        ? `${names} estarão no Encontro de Casais!`
         : "Estaremos juntos no Encontro de Casais!",
 
       custom,
