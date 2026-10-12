@@ -569,11 +569,14 @@ label {
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  width: 43%;
-  max-width: 150px;
+
+  width: 58%;
+  max-width: 210px;
   aspect-ratio: 1;
+
   margin: 5% auto 3%;
   overflow: hidden;
+
   border: 2px solid var(--gold);
   border-radius: 50%;
   background: #f5e5d1;
